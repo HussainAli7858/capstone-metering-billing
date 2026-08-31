@@ -1,0 +1,51 @@
+# Capstone manifest — read by the evaluator's automation.
+name: Usage Metering & Billing Engine
+track: Backend AI Engineering
+
+run: npm install && docker compose up -d && npm run dev
+seed: npm run seed
+test: null
+
+base_url: http://localhost:3000
+
+endpoints:
+  - method: GET
+    path: /health
+    description: Basic liveness check.
+
+  - method: POST
+    path: /generate
+    description: >
+      Dummy billable endpoint. Records usage (idempotent by idempotencyKey),
+      checks quota, returns cost. Body: { tenantId, usageType, quantity,
+      idempotencyKey, tokenBreakdown? }.
+
+  - method: GET
+    path: /usage/:tenantId
+    description: Monthly usage rollup, plan limits, and calculated cost for a tenant.
+
+  - method: POST
+    path: /billing/checkout
+    description: >
+      Creates a Stripe Checkout session (test mode) for a tenant to
+      upgrade to the Pro plan. Body: { tenantId }.
+
+  - method: POST
+    path: /webhooks/stripe
+    description: >
+      Stripe webhook receiver. Verifies signature, deduplicates by event ID,
+      syncs tenant plan/subscription status.
+
+  - method: POST
+    path: /jobs/rollup/run
+    description: Manually triggers the background usage rollup job (for demo/testing).
+
+  - method: GET
+    path: /jobs/runs
+    description: Recent background job run history (status, attempt, errors, timing).
+
+notes: >
+  Stripe integration requires .env values (STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID_PRO) from a Stripe sandbox/test-mode
+  account, and `stripe listen --forward-to localhost:3000/webhooks/stripe`
+  running locally to receive webhook events. See README.md for full setup.
