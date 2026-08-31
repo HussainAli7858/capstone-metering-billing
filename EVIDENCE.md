@@ -22,3 +22,23 @@ push past it is rejected with a clear, machine-readable reason. Quota enforcemen
 sums *all* usage events for the tenant (cumulative, not per-session), confirmed
 by an earlier run against a tenant with pre-existing usage, where the rejection
 correctly accounted for prior history.
+
+## Requirement: Webhook security — forged signature rejected, replay deduplicated
+
+**Forged signature test:**
+Sent `POST /webhooks/stripe` directly via Postman with a fabricated
+`Stripe-Signature` header and arbitrary JSON body.
+- Response: `400 { "error": "Invalid signature." }`
+- Confirmed via server log: "Webhook signature verification failed:
+  No signatures found matching the expected signature for payload."
+
+**Replay deduplication test:**
+Triggered a real `checkout.session.completed` event (`evt_1UAWEkGSQBPHm7VxhnSLGKcR`)
+via `stripe trigger`, then explicitly replayed the identical event ID via
+`stripe events resend evt_1UAWEkGSQBPHm7VxhnSLGKcR`.
+- `stripe listen` terminal shows the event forwarded a second time,
+  server responded `200`.
+- Server logs show NO second "upgraded to Pro" or processing log for
+  this event ID on replay — confirmed via the `processed_webhook_events`
+  table check in the webhook handler, which short-circuits on a known
+  `stripe_event_id` before any tenant mutation runs.
