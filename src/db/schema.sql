@@ -47,6 +47,27 @@ CREATE TABLE IF NOT EXISTS processed_webhook_events (
 -- Enable UUID generation
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+CREATE TABLE IF NOT EXISTS usage_rollups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    period_start TIMESTAMPTZ NOT NULL,
+    api_calls_used INTEGER NOT NULL DEFAULT 0,
+    ai_tokens_used INTEGER NOT NULL DEFAULT 0,
+    total_cost_cents INTEGER NOT NULL DEFAULT 0,
+    computed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, period_start)
+);
+
+CREATE TABLE IF NOT EXISTS job_runs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    job_name TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('running', 'succeeded', 'failed')),
+    attempt INTEGER NOT NULL DEFAULT 1,
+    error_message TEXT,
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at TIMESTAMPTZ
+);
+
 -- Seed the two plans
 INSERT INTO plans (name, api_call_limit, ai_token_limit, monthly_price_cents)
 VALUES
