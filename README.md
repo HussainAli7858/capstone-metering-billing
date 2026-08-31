@@ -168,12 +168,12 @@ npm run dev                        # http://localhost:3000 (node --watch)
 # Record a billable API call (idempotent — same key = same result, no double count)
 curl -X POST localhost:3000/generate \
   -H "Content-Type: application/json" \
-  -d '{"tenantId":"<TENANT_ID>","type":"api_call","quantity":1,"idempotencyKey":"demo-1"}'
+  -d '{"tenantId":"<TENANT_ID>","usageType":"api_call","quantity":1,"idempotencyKey":"demo-1"}'
 
 # Record AI token usage
 curl -X POST localhost:3000/generate \
   -H "Content-Type: application/json" \
-  -d '{"tenantId":"<TENANT_ID>","type":"ai_tokens","idempotencyKey":"demo-2","tokenBreakdown":{"input":10000,"cachedInput":5000,"output":2000,"reasoning":1000}}'
+  -d '{"tenantId":"<TENANT_ID>","usageType":"ai_tokens","idempotencyKey":"demo-2","tokenBreakdown":{"inputTokens":10000,"cachedInputTokens":5000,"outputTokens":2000,"reasoningTokens":1000}}'
 
 # Check usage + cost rollup
 curl localhost:3000/usage/<TENANT_ID>
