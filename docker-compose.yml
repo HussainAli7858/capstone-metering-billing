@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: billing_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: billing_user
+      POSTGRES_PASSWORD: billing_pass
+      POSTGRES_DB: billing_engine
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./src/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+volumes:
+  pgdata:
